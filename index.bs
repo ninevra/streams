@@ -1791,18 +1791,7 @@ has the following [=struct/items=]:
  The <dfn id="rbs-controller-byob-request" attribute
  for="ReadableByteStreamController">byobRequest</dfn> getter steps are:
 
- 1. If [=this=].[=ReadableByteStreamController/[[byobRequest]]=] is null and [=this=].[=ReadableByteStreamController/[[pendingPullIntos]]=] is not [=list/is
-    empty|empty=],
-  1. Let |firstDescriptor| be [=this=].[=ReadableByteStreamController/[[pendingPullIntos]]=][0].
-  1. Let |view| be ! [$Construct$]({{%Uint8Array%}}, « |firstDescriptor|'s [=pull-into
-     descriptor/buffer=], |firstDescriptor|'s [=pull-into descriptor/byte offset=] +
-     |firstDescriptor|'s [=pull-into descriptor/bytes filled=], |firstDescriptor|'s [=pull-into
-     descriptor/byte length=] − |firstDescriptor|'s [=pull-into descriptor/bytes filled=] »).
-  1. Let |byobRequest| be a [=new=] {{ReadableStreamBYOBRequest}}.
-  1. Set |byobRequest|.[=ReadableStreamBYOBRequest/[[controller]]=] to [=this=].
-  1. Set |byobRequest|.[=ReadableStreamBYOBRequest/[[view]]=] to |view|.
-  1. Set [=this=].[=ReadableByteStreamController/[[byobRequest]]=] to |byobRequest|.
- 1. Return [=this=].[=ReadableByteStreamController/[[byobRequest]]=].
+ 1. Return ! [$ReadableByteStreamControllerGetBYOBRequest$]([=this=]).
 </div>
 
 <div algorithm>
@@ -3042,6 +3031,25 @@ The following abstract operations support the implementation of the
   1. Assert: |pullIntoDescriptor|'s [=pull-into descriptor/bytes filled=] &lt;
      |pullIntoDescriptor|'s [=pull-into descriptor/element size=].
  1. Return |ready|.
+</div>
+
+<div algorithm>
+ <dfn abstract-op
+ lt="ReadableByteStreamControllerGetBYOBRequest">ReadableByteStreamControllerGetBYOBRequest(|controller|)</dfn> performs
+ the following steps:
+
+ 1. If |controller|.[=ReadableByteStreamController/[[byobRequest]]=] is null and
+    |controller|.[=ReadableByteStreamController/[[pendingPullIntos]]=] is not [=list/is empty|empty=],
+  1. Let |firstDescriptor| be |controller|.[=ReadableByteStreamController/[[pendingPullIntos]]=][0].
+  1. Let |view| be ! [$Construct$]({{%Uint8Array%}}, « |firstDescriptor|'s [=pull-into
+     descriptor/buffer=], |firstDescriptor|'s [=pull-into descriptor/byte offset=] +
+     |firstDescriptor|'s [=pull-into descriptor/bytes filled=], |firstDescriptor|'s [=pull-into
+     descriptor/byte length=] − |firstDescriptor|'s [=pull-into descriptor/bytes filled=] »).
+  1. Let |byobRequest| be a [=new=] {{ReadableStreamBYOBRequest}}.
+  1. Set |byobRequest|.[=ReadableStreamBYOBRequest/[[controller]]=] to |controller|.
+  1. Set |byobRequest|.[=ReadableStreamBYOBRequest/[[view]]=] to |view|.
+  1. Set |controller|.[=ReadableByteStreamController/[[byobRequest]]=] to |byobRequest|.
+ 1. Return |controller|.[=ReadableByteStreamController/[[byobRequest]]=].
 </div>
 
 <div algorithm>
@@ -6190,7 +6198,7 @@ to grow organically as needed.
  {{ReadableStream}} object |stream|, given an optional algorithm <dfn export for="ReadableStream/set
  up"><var>pullAlgorithm</var></dfn>, an optional algorithm <dfn export for="ReadableStream/set
  up"><var>cancelAlgorithm</var></dfn>, an optional number <dfn export for="ReadableStream/set
- up"><var>highWaterMark</var></dfn> (default 1), an optional algorithm <dfn export
+ up"><var>highWaterMark</var></dfn> (default 1), and an optional algorithm <dfn export
  for="ReadableStream/set up"><var>sizeAlgorithm</var></dfn>, perform the following steps. If given,
  |sizeAlgorithm| must be an algorithm accepting [=chunk=] objects and returning a number; and if
  given, |highWaterMark| must be a non-negative, non-NaN number.
@@ -6207,38 +6215,142 @@ to grow organically as needed.
  1. Let |controller| be a [=new=] {{ReadableStreamDefaultController}}.
  1. Perform ! [$SetUpReadableStreamDefaultController$](|stream|, |controller|, |startAlgorithm|,
     |pullAlgorithmWrapper|, |cancelAlgorithmWrapper|, |highWaterMark|, |sizeAlgorithm|).
-
- <div class="example" id="example-set-up-rs">
-  Creating a {{ReadableStream}} from other specifications is thus a two-step process, like so:
-
-  1. Let |readableStream| be a [=new=] {{ReadableStream}}.
-  1. [=ReadableStream/Set up=] |readableStream| given….
- </div>
-
- <p class="note">Subclasses of {{ReadableStream}} will use the [=ReadableStream/set up=] operation
- directly on the [=this=] value inside their constructor steps.</p>
 </div>
+
+<div algorithm="set up a byte-source ReadableStream">
+ To <dfn export for="ReadableStream">set up with byte reading support</dfn> a
+ newly-[=new|created-via-Web IDL=] {{ReadableStream}} object |stream|, given an optional algorithm
+ <dfn export for="ReadableStream/set up with byte reading support"><var>pullAlgorithm</var></dfn>,
+ an optional algorithm <dfn export for="ReadableStream/set up with byte reading
+ support"><var>cancelAlgorithm</var></dfn>, and an optional number <dfn export
+ for="ReadableStream/set up with byte reading support"><var>highWaterMark</var></dfn> (default 0),
+ perform the following steps. If given, |highWaterMark| must be a non-negative, non-NaN number.
+
+ 1. Let |startAlgorithm| be an algorithm that returns undefined.
+ 1. Let |pullAlgorithmWrapper| be an algorithm that runs these steps:
+  1. If |pullAlgorithm| was given, run it.
+  1. Return [=a promise resolved with=] undefined.
+ 1. Let |cancelAlgorithmWrapper| be an algorithm that runs these steps:
+  1. If |cancelAlgorithm| was given, run it.
+  1. Return [=a promise resolved with=] undefined.
+ 1. Perform [$InitializeReadableStream$](|stream|).
+ 1. Let |controller| be a [=new=] {{ReadableByteStreamController}}.
+ 1. Perform ! [$SetUpReadableByteStreamController$](|stream|, |controller|, |startAlgorithm|,
+    |pullAlgorithmWrapper|, |cancelAlgorithmWrapper|, |highWaterMark|, undefined).
+</div>
+
+<div class="example" id="example-set-up-rs">
+ Creating a {{ReadableStream}} from other specifications is thus a two-step process, like so:
+
+ 1. Let |readableStream| be a [=new=] {{ReadableStream}}.
+ 1. [=ReadableStream/Set up=] |readableStream| given….
+</div>
+
+<p class="note">Subclasses of {{ReadableStream}} will use the [=ReadableStream/set up=] or
+[=ReadableStream/set up with byte reading support=] operations directly on the [=this=] value inside
+their constructor steps.
 
 <hr>
 
 The following algorithms must only be used on {{ReadableStream}} instances initialized via the above
-[=ReadableStream/set up=] algorithm:
+[=ReadableStream/set up=] or [=ReadableStream/set up with byte reading support=] algorithms (not,
+e.g., on web-developer-created instances):
 
-<p algorithm>A {{ReadableStream}} |stream| <dfn export for="ReadableStream" lt="need more
-data|needs more data">needs more data</dfn> if |stream| is [=ReadableStream/readable=] and !
-[$ReadableStreamDefaultControllerGetDesiredSize$](|stream|.[=ReadableStream/[[controller]]=])
-returns a positive number.
+<div algorithm>
+ A {{ReadableStream}} |stream| <dfn export for="ReadableStream" lt="need more
+ data|needs more data">needs more data</dfn> if the following steps return true:
+
+ 1. If |stream| is not [=ReadableStream/readable=], then return false.
+ 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableStreamDefaultController}}, and !
+    [$ReadableStreamDefaultControllerGetDesiredSize$](|stream|.[=ReadableStream/[[controller]]=]) is
+    a positive number, then return true.
+ 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableByteStreamController}}, and !
+    [$ReadableByteStreamControllerGetDesiredSize$](|stream|.[=ReadableStream/[[controller]]=]) is
+    a positive number, then return true.
+ 1. Return false.
+</div>
+
+<div algorithm>
+ To <dfn export for="ReadableStream">close</dfn> a {{ReadableStream}} |stream|:
+
+ 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableStreamDefaultController}}, then
+    perform ! [$ReadableStreamDefaultControllerClose$](|stream|.[=ReadableStream/[[controller]]=]).
+ 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableByteStreamController}}, then
+    perform ! [$ReadableByteStreamControllerClose$](|stream|.[=ReadableStream/[[controller]]=]).
+</div>
+
+<div algorithm>
+ To <dfn export for="ReadableStream">error</dfn> a {{ReadableStream}} |stream| given a JavaScript
+ value |e|:
+
+ 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableStreamDefaultController}}, then
+    perform ! [$ReadableStreamDefaultControllerError$](|stream|.[=ReadableStream/[[controller]]=],
+    |e|).
+ 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableByteStreamController}}, then
+    perform ! [$ReadableByteStreamControllerError$](|stream|.[=ReadableStream/[[controller]]=],
+    |e|).
+</div>
+
+<hr>
+
+The following algorithm must only be used on {{ReadableStream}} instances initialized via the above
+[=ReadableStream/set up=] algorithm:
 
 <p algorithm>To <dfn export for="ReadableStream">enqueue</dfn> the JavaScript value |chunk| into a
 {{ReadableStream}} |stream|, perform !
 [$ReadableStreamDefaultControllerEnqueue$](|stream|.[=ReadableStream/[[controller]]=], |chunk|).
 
-<p algorithm>To <dfn export for="ReadableStream">close</dfn> a {{ReadableStream}} |stream|, perform
-! [$ReadableStreamDefaultControllerClose$](|stream|.[=ReadableStream/[[controller]]=]).
+<hr>
 
-<p algorithm>To <dfn export for="ReadableStream">error</dfn> a {{ReadableStream}} |stream| given a
-JavaScript value |e|, perform !
-[$ReadableStreamDefaultControllerError$](|stream|.[=ReadableStream/[[controller]]=], |e|).
+The following algorithms must only be used on {{ReadableStream}} instances initialized via the above
+[=ReadableStream/set up with byte reading support=] algorithm:
+
+<div algorithm>
+ The <dfn export for="ReadableStream">current requested number of bytes</dfn> for a
+ {{ReadableStream}} |stream| is either a positive integer or null, determined by the following
+ steps:
+
+ 1. Assert: |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableByteStreamController}}.
+ 1. Let |byobRequest| be !
+    [$ReadableByteStreamControllerGetBYOBRequest$](|stream|.[=ReadableStream/[[controller]]=]).
+ 1. If |byobRequest| is null, then return null.
+ 1. Return |byobRequest|.[=ReadableStreamBYOBRequest/[[view]]=].\[[ByteLength]].
+</div>
+
+<!-- TODO: use https://github.com/heycam/webidl/pull/987's "create" and "write" when they land. -->
+<div algorithm>
+ To <dfn export for="ReadableStream">enqueue bytes</dfn> into a {{ReadableStream}} |stream| given a
+ [=byte sequence=] |bytes|:
+
+ 1. Assert: |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableByteStreamController}}.
+ 1. Assert: |bytes|'s [=byte sequence/length=] is positive.
+ 1. Let |byobRequest| be !
+    [$ReadableByteStreamControllerGetBYOBRequest$](|stream|.[=ReadableStream/[[controller]]=]).
+ 1. If |byobRequest| is null, or
+    |byobRequest|.[=ReadableStreamBYOBRequest/[[view]]=].\[[ByteLength]] &lt; |bytes|'s [=byte
+    sequence/length=], then:
+  1. Let |uint8Array| be a new {{Uint8Array}} wrapping an {{ArrayBuffer}} backed by |bytes|.
+  1. Perform ! [$ReadableByteStreamControllerEnqueue$](|stream|.[=ReadableStream/[[controller]]=],
+     |uint8Array|).
+ 1. Otherwise,
+  1. Write |bytes| into
+     |byobRequest|.[=ReadableStreamBYOBRequest/[[view]]=].\[[ViewedArrayBuffer]].\[[ArrayBufferData]],
+     starting at the byte offset given by
+     |byobRequest|.[=ReadableStreamBYOBRequest/[[view]]=].\[[ByteOffset]].
+
+     Implementations are encouraged to, when possible, do this directly from whatever underlying
+     I/O system is producing |bytes|. In this sense the existence of an intermediate |bytes|
+     variable might end up as spec fiction, if the underlying I/O system can write directly into the
+     backing data block.
+  1. Perform ! [$ReadableByteStreamControllerRespond$](|stream|.[=ReadableStream/[[controller]]=],
+     |bytes|'s [=byte sequence/length=]).
+</div>
+
+When the [=ReadableStream/current requested number of bytes=] is non-null, specifications should
+prefer to use [=ReadableStream/enqueue bytes=] with a [=byte sequence=] whose [=byte
+sequence/length=] equal to (or, if not equal to, less than) that value. Doing so will minimize the
+number of copies involved and will better respect the wishes of stream [=consumers=].
+
 
 <h4 id="other-specs-rs-reading">Reading</h4>
 
@@ -6295,7 +6407,8 @@ a chunk</dfn> from a {{ReadableStreamDefaultReader}} |reader|, given a [=read re
 
  <p class="note">Because |reader| grants exclusive access to its corresponding {{ReadableStream}},
  the actual mechanism of how to read cannot be observed. Implementations could use a more direct
- mechanism if convenient.
+ mechanism if convenient, such as acquiring and using a {{ReadableStreamBYOBReader}} instead of a
+ {{ReadableStreamDefaultReader}}, or accessing the chunks directly.
 </div>
 
 <p algorithm>To <dfn export for="ReadableStreamDefaultReader">release</dfn> a
