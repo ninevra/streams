@@ -6261,11 +6261,11 @@ e.g., on web-developer-created instances):
  high water mark</dfn> is the result of running the following steps:
 
  1. If |stream| is not [=ReadableStream/readable=], then return 0.
- 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableStreamDefaultController}}, then
-    return !
+ 1. If |stream|.[=ReadableStream/[[controller]]=] [=implements=] {{ReadableByteStreamController}},
+    then return !
+    [$ReadableByteStreamControllerGetDesiredSize$](|stream|.[=ReadableStream/[[controller]]=]).
+ 1. Return !
     [$ReadableStreamDefaultControllerGetDesiredSize$](|stream|.[=ReadableStream/[[controller]]=]).
- 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableByteStreamController}}, then return
-    ! [$ReadableByteStreamControllerGetDesiredSize$](|stream|.[=ReadableStream/[[controller]]=]).
 </div>
 
 <p algorithm>A {{ReadableStream}} <dfn export for="ReadableStream" lt="need more data|needs
@@ -6275,21 +6275,20 @@ mark=] is greater than zero.
 <div algorithm>
  To <dfn export for="ReadableStream">close</dfn> a {{ReadableStream}} |stream|:
 
- 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableStreamDefaultController}}, then
-    perform ! [$ReadableStreamDefaultControllerClose$](|stream|.[=ReadableStream/[[controller]]=]).
- 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableByteStreamController}}, then
-    perform ! [$ReadableByteStreamControllerClose$](|stream|.[=ReadableStream/[[controller]]=]).
+ 1. If |stream|.[=ReadableStream/[[controller]]=] [=implements=] {{ReadableByteStreamController}},
+    then perform !
+    [$ReadableByteStreamControllerClose$](|stream|.[=ReadableStream/[[controller]]=]).
+ 1. Perform ! [$ReadableStreamDefaultControllerClose$](|stream|.[=ReadableStream/[[controller]]=]).
 </div>
 
 <div algorithm>
  To <dfn export for="ReadableStream">error</dfn> a {{ReadableStream}} |stream| given a JavaScript
  value |e|:
 
- 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableStreamDefaultController}}, then
-    perform ! [$ReadableStreamDefaultControllerError$](|stream|.[=ReadableStream/[[controller]]=],
+ 1. If |stream|.[=ReadableStream/[[controller]]=] [=implements=] {{ReadableByteStreamController}},
+    then perform ! [$ReadableByteStreamControllerError$](|stream|.[=ReadableStream/[[controller]]=],
     |e|).
- 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableByteStreamController}}, then
-    perform ! [$ReadableByteStreamControllerError$](|stream|.[=ReadableStream/[[controller]]=],
+ 1. Perform ! [$ReadableStreamDefaultControllerError$](|stream|.[=ReadableStream/[[controller]]=],
     |e|).
 </div>
 
@@ -6312,7 +6311,8 @@ The following algorithms must only be used on {{ReadableStream}} instances initi
  {{ReadableStream}} |stream| is either a positive integer or null, determined by the following
  steps:
 
- 1. Assert: |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableByteStreamController}}.
+ 1. Assert: |stream|.[=ReadableStream/[[controller]]=] [=implements=]
+    {{ReadableByteStreamController}}.
  1. Let |byobRequest| be !
     [$ReadableByteStreamControllerGetBYOBRequest$](|stream|.[=ReadableStream/[[controller]]=]).
  1. If |byobRequest| is null, then return null.
@@ -6324,7 +6324,8 @@ The following algorithms must only be used on {{ReadableStream}} instances initi
  To <dfn export for="ReadableStream">enqueue bytes</dfn> into a {{ReadableStream}} |stream| given a
  [=byte sequence=] |bytes|:
 
- 1. Assert: |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableByteStreamController}}.
+ 1. Assert: |stream|.[=ReadableStream/[[controller]]=] [=implements=]
+    {{ReadableByteStreamController}}.
  1. Assert: |bytes|'s [=byte sequence/length=] is positive.
  1. Let |byobRequest| be !
     [$ReadableByteStreamControllerGetBYOBRequest$](|stream|.[=ReadableStream/[[controller]]=]).
