@@ -6257,18 +6257,20 @@ The following algorithms must only be used on {{ReadableStream}} instances initi
 e.g., on web-developer-created instances):
 
 <div algorithm>
- A {{ReadableStream}} |stream| <dfn export for="ReadableStream" lt="need more
- data|needs more data">needs more data</dfn> if the following steps return true:
+ A {{ReadableStream}} |stream|'s <dfn export for="ReadableStream">desired size to fill up to the
+ high water mark</dfn> is the result of running the following steps:
 
- 1. If |stream| is not [=ReadableStream/readable=], then return false.
- 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableStreamDefaultController}}, and !
-    [$ReadableStreamDefaultControllerGetDesiredSize$](|stream|.[=ReadableStream/[[controller]]=]) is
-    a positive number, then return true.
- 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableByteStreamController}}, and !
-    [$ReadableByteStreamControllerGetDesiredSize$](|stream|.[=ReadableStream/[[controller]]=]) is
-    a positive number, then return true.
- 1. Return false.
+ 1. If |stream| is not [=ReadableStream/readable=], then return 0.
+ 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableStreamDefaultController}}, then
+    return !
+    [$ReadableStreamDefaultControllerGetDesiredSize$](|stream|.[=ReadableStream/[[controller]]=]).
+ 1. If |stream|.[=ReadableStream/[[controller]]=] is a {{ReadableByteStreamController}}, then return
+    ! [$ReadableByteStreamControllerGetDesiredSize$](|stream|.[=ReadableStream/[[controller]]=]).
 </div>
+
+<p algorithm>A {{ReadableStream}} <dfn export for="ReadableStream" lt="need more data|needs
+more data">needs more data</dfn> if its [=ReadableStream/desired size to fill up to the high water
+mark=] is greater than zero.
 
 <div algorithm>
  To <dfn export for="ReadableStream">close</dfn> a {{ReadableStream}} |stream|:
