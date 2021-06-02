@@ -6211,7 +6211,7 @@ to grow organically as needed.
   1. If |cancelAlgorithm| was given, run it.
   1. Return [=a promise resolved with=] undefined.
  1. If |sizeAlgorithm| was not given, then set it to an algorithm that returns 1.
- 1. Perform [$InitializeReadableStream$](|stream|).
+ 1. Perform ! [$InitializeReadableStream$](|stream|).
  1. Let |controller| be a [=new=] {{ReadableStreamDefaultController}}.
  1. Perform ! [$SetUpReadableStreamDefaultController$](|stream|, |controller|, |startAlgorithm|,
     |pullAlgorithmWrapper|, |cancelAlgorithmWrapper|, |highWaterMark|, |sizeAlgorithm|).
@@ -6233,7 +6233,7 @@ to grow organically as needed.
  1. Let |cancelAlgorithmWrapper| be an algorithm that runs these steps:
   1. If |cancelAlgorithm| was given, run it.
   1. Return [=a promise resolved with=] undefined.
- 1. Perform [$InitializeReadableStream$](|stream|).
+ 1. Perform ! [$InitializeReadableStream$](|stream|).
  1. Let |controller| be a [=new=] {{ReadableByteStreamController}}.
  1. Perform ! [$SetUpReadableByteStreamController$](|stream|, |controller|, |startAlgorithm|,
     |pullAlgorithmWrapper|, |cancelAlgorithmWrapper|, |highWaterMark|, undefined).
@@ -6490,7 +6490,7 @@ for="ReadableStream">locked</dfn> if ! [$IsReadableStreamLocked$](|stream|) retu
   1. If |abortAlgorithm| was given, return the result of running it.
   1. Return [=a promise resolved with=] undefined.
  1. If |sizeAlgorithm| was not given, then set it to an algorithm that returns 1.
- 1. Perform [$InitializeWritableStream$](|stream|).
+ 1. Perform ! [$InitializeWritableStream$](|stream|).
  1. Let |controller| be a [=new=] {{WritableStreamDefaultController}}.
  1. Perform ! [$SetUpWritableStreamDefaultController$](|stream|, |controller|, |startAlgorithm|,
     |writeAlgorithm|, |closeAlgorithmWrapper|, |abortAlgorithmWrapper|, |highWaterMark|,
