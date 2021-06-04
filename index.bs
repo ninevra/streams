@@ -6228,10 +6228,14 @@ to grow organically as needed.
 
  1. Let |startAlgorithm| be an algorithm that returns undefined.
  1. Let |pullAlgorithmWrapper| be an algorithm that runs these steps:
-  1. If |pullAlgorithm| was given, run it.
+  1. Let |result| be the result of running |pullAlgorithm|, if |pullAlgorithm| was given, or null
+     otherwise. If this throws an exception |e|, return [=a promise rejected with=] |e|.
+  1. If |result| is a {{Promise}}, then return |result|.
   1. Return [=a promise resolved with=] undefined.
  1. Let |cancelAlgorithmWrapper| be an algorithm that runs these steps:
-  1. If |cancelAlgorithm| was given, run it.
+  1. Let |result| be the result of running |cancelAlgorithm|, if |cancelAlgorithm| was given, or
+     null otherwise. If this throws an exception |e|, return [=a promise rejected with=] |e|.
+  1. If |result| is a {{Promise}}, then return |result|.
   1. Return [=a promise resolved with=] undefined.
  1. Perform ! [$InitializeReadableStream$](|stream|).
  1. Let |controller| be a [=new=] {{ReadableByteStreamController}}.
@@ -6329,13 +6333,14 @@ The following algorithms must only be used on {{ReadableStream}} instances initi
  1. Assert: |bytes|'s [=byte sequence/length=] is positive.
  1. Let |byobRequest| be !
     [$ReadableByteStreamControllerGetBYOBRequest$](|stream|.[=ReadableStream/[[controller]]=]).
- 1. If |byobRequest| is null, or
-    |byobRequest|.[=ReadableStreamBYOBRequest/[[view]]=].\[[ByteLength]] &lt; |bytes|'s [=byte
-    sequence/length=], then:
+ 1. If |byobRequest| is null, or |bytes|'s [=byte sequence/length=] >
+    |byobRequest|.[=ReadableStreamBYOBRequest/[[view]]=].\[[ByteLength]], then:
   1. Let |uint8Array| be a new {{Uint8Array}} wrapping an {{ArrayBuffer}} backed by |bytes|.
   1. Perform ! [$ReadableByteStreamControllerEnqueue$](|stream|.[=ReadableStream/[[controller]]=],
      |uint8Array|).
  1. Otherwise,
+  1. Assert: |bytes|'s [=byte sequence/length=] ≤
+     |byobRequest|.[=ReadableStreamBYOBRequest/[[view]]=].\[[ByteLength]].
   1. Write |bytes| into
      |byobRequest|.[=ReadableStreamBYOBRequest/[[view]]=].\[[ViewedArrayBuffer]].\[[ArrayBufferData]],
      starting at the byte offset given by
